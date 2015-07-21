@@ -1,14 +1,14 @@
 Summary:	Library for generating PDF documents
 Summary(pl.UTF-8):	Biblioteka do generowania dokumentów PDF
 Name:		libharu
-Version:	2.2.1
-Release:	5
+Version:	2.3.0
+%define	tagver	RELEASE_%(echo %{version} | tr . _)
+Release:	1
 License:	MIT-like
 Group:		Libraries
-Source0:	http://libharu.org/files/%{name}-%{version}.tar.bz2
-# Source0-md5:	4febd7e677b1c5d54db59a608b84e79f
+Source0:	https://github.com/libharu/libharu/archive/%{tagver}/%{name}-%{version}.tar.gz
+# Source0-md5:	4f916aa49c3069b3a10850013c507460
 Patch0:		%{name}-libdir.patch
-Patch1:		%{name}-libpng15.patch
 URL:		http://libharu.org/
 BuildRequires:	autoconf >= 2.60
 BuildRequires:	automake
@@ -70,9 +70,8 @@ Static Haru PDF library.
 Statyczna biblioteka Haru PDF.
 
 %prep
-%setup -q
+%setup -q -n %{name}-%{tagver}
 %patch0 -p1
-%patch1 -p1
 
 %build
 %{__libtoolize}
@@ -80,7 +79,10 @@ Statyczna biblioteka Haru PDF.
 %{__autoconf}
 %{__autoheader}
 %{__automake}
-%configure
+# avoid detection of libpng14 and libpng12, use just libpng to get system default version
+%configure \
+	ac_cv_lib_png14_png_init_io=no \
+	ac_cv_lib_png12_png_init_io=no
 
 %{__make}
 
