@@ -1,19 +1,22 @@
+#
+# Conditional build:
+%bcond_without	static_libs	# static library
+
 Summary:	Library for generating PDF documents
 Summary(pl.UTF-8):	Biblioteka do generowania dokumentów PDF
 Name:		libharu
-Version:	2.3.0
-%define	tagver	RELEASE_%(echo %{version} | tr . _)
+Version:	2.4.3
 Release:	1
 License:	MIT-like
 Group:		Libraries
-Source0:	https://github.com/libharu/libharu/archive/%{tagver}/%{name}-%{version}.tar.gz
-# Source0-md5:	4f916aa49c3069b3a10850013c507460
+#Source0Download: https://github.com/libharu/libharu/releases
+Source0:	https://github.com/libharu/libharu/archive/v%{version}/%{name}-%{version}.tar.gz
+# Source0-md5:	7c0e7dc0dc400ad4d6602277bb532bc4
 Patch0:		%{name}-libdir.patch
+Patch1:		%{name}-soname.patch
 URL:		http://libharu.org/
-BuildRequires:	autoconf >= 2.60
-BuildRequires:	automake
+BuildRequires:	cmake >= 3.10
 BuildRequires:	libpng-devel
-BuildRequires:	libtool
 BuildRequires:	zlib-devel
 BuildRoot:	%{tmpdir}/%{name}-%{version}-root-%(id -u -n)
 
@@ -70,27 +73,40 @@ Static Haru PDF library.
 Statyczna biblioteka Haru PDF.
 
 %prep
-%setup -q -n %{name}-%{tagver}
+%setup -q
 %patch0 -p1
+%patch1 -p1
 
 %build
-%{__libtoolize}
-%{__aclocal}
-%{__autoconf}
-%{__autoheader}
-%{__automake}
-# avoid detection of libpng14 and libpng12, use just libpng to get system default version
-%configure \
-	ac_cv_lib_png14_png_init_io=no \
-	ac_cv_lib_png12_png_init_io=no
+%if %{with static_libs}
+install -d build-static
+cd build-static
+%cmake .. \
+	-DBUILD_SHARED_LIBS=OFF
+
+%{__make}
+cd ..
+%endif
+
+install -d build
+cd build
+%cmake ..
 
 %{__make}
 
 %install
 rm -rf $RPM_BUILD_ROOT
 
-%{__make} install \
+%if %{with static_libs}
+%{__make} -C build-static install \
 	DESTDIR=$RPM_BUILD_ROOT
+%endif
+
+%{__make} -C build install \
+	DESTDIR=$RPM_BUILD_ROOT
+
+# docs packaged as %doc + bindings sources
+%{__rm} -r $RPM_BUILD_ROOT%{_datadir}/libharu
 
 %clean
 rm -rf $RPM_BUILD_ROOT
@@ -100,13 +116,13 @@ rm -rf $RPM_BUILD_ROOT
 
 %files
 %defattr(644,root,root,755)
-%doc README
-%attr(755,root,root) %{_libdir}/libhpdf-%{version}.so
+%doc CHANGES LICENSE README.md
+%attr(755,root,root) %{_libdir}/libhpdf.so.*.*.*
+%attr(755,root,root) %ghost %{_libdir}/libhpdf.so.2.4
 
 %files devel
 %defattr(644,root,root,755)
 %attr(755,root,root) %{_libdir}/libhpdf.so
-%{_libdir}/libhpdf.la
 %{_includedir}/hpdf*.h
 
 %files static

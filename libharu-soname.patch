@@ -1,0 +1,11 @@
+--- libharu-2.4.3/src/CMakeLists.txt.orig	2022-10-14 12:04:02.000000000 +0200
++++ libharu-2.4.3/src/CMakeLists.txt	2023-01-18 17:15:53.343158117 +0100
+@@ -73,6 +73,8 @@ set(
+ # create hpdf library
+ # =======================================================================
+ add_library(hpdf ${LIBHPDF_SRCS})
++set_target_properties(hpdf PROPERTIES VERSION ${HPDF_MAJOR_VERSION}.${HPDF_MINOR_VERSION}.${HPDF_BUGFIX_VERSION} SOVERSION ${HPDF_MAJOR_VERSION}.${HPDF_MINOR_VERSION})
++
+ if (PNG_FOUND)
+     include_directories (${PNG_INCLUDE_DIRS})
+     target_link_libraries (hpdf ${PNG_LIBRARIES})
